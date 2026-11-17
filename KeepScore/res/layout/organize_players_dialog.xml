@@ -1,5 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:dslv="http://schemas.android.com/apk/res/com.nolanlawson.keepscore"
+    xmlns:dslv="http://schemas.android.com/apk/res-auto"
     android:id="@+id/record_dialog_linear_layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"

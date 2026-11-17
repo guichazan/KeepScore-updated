@@ -287,6 +287,11 @@ LibreOffice, or Google Docs.</string>
     <string name="toast_valid_initial_score">You must enter a valid number.</string>
     <string name="toast_valid_update_delay_values">You must enter a number between 1 and 600.</string>
     <string name="toast_calc_error">Invalid calculator entry.</string>
+    <!-- [customizacao] estatistica de vitorias -->
+    <string name="menu_win_stats">Win statistics</string>
+    <string name="text_win_stats_line">%1$d. %2$s: %3$d win(s) in %4$d game(s)</string>
+    <string name="text_win_stats_summary">%1$d game(s) counted. Highest score wins; ties count as a win for everyone tied. Unnamed players are not counted.</string>
+    <string name="text_win_stats_empty">No saved games with named players and recorded rounds yet.</string>
 </resources>
 
 

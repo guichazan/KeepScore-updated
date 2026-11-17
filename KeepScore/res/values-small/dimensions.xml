@@ -11,7 +11,7 @@
 	<dimen name="round_total_text_size">14sp</dimen>
 	
 	<dimen name="delta_button_width">50dp</dimen>
-	<dimen name="history_width">35dp</dimen>
+	<dimen name="history_width">35dp</dimen><!-- minimo; PlayerView amplia p/ "+99999" conforme a fonte -->
 	
 	<dimen name="chart_item_width">50dp</dimen>
 	

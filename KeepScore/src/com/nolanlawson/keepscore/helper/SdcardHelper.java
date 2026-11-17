@@ -51,7 +51,7 @@ public class SdcardHelper {
 
     private static final int BUFFER = 0x1000; // 4K
 
-    private static final String ROOT_DIR = "keepscore";
+    private static final String ROOT_DIR = com.nolanlawson.keepscore.BuildConfig.SD_ROOT_DIR;
     
     // apparently this is a good format for Excel/LibreOffice
     private static final DateFormat CSV_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);

@@ -1,0 +1,52 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.nolanlawson.keepscore'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.nolanlawson.keepscore'
+        minSdk 21
+        targetSdk 24
+        versionCode 28
+        versionName '1.5.1'
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+        two { res.srcDirs = ['src-two/res'] }
+    }
+
+    flavorDimensions 'app'
+    productFlavors {
+        original {
+            dimension 'app'
+            buildConfigField 'String', 'SD_ROOT_DIR', '"keepscore"'
+        }
+        two {
+            dimension 'app'
+            applicationId 'com.nolanlawson.keepscore2'
+            versionNameSuffix '-ks2'
+            buildConfigField 'String', 'SD_ROOT_DIR', '"keepscore2"'
+        }
+    }
+
+    buildFeatures { buildConfig true }
+    lint { abortOnError false; checkReleaseBuilds false }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation files('../patched-abs/actionbarsherlock-4.4.0-patched.aar')
+    implementation 'com.google.android:support-v4:r7'
+    implementation 'com.github.yukuku:ambilwarna:2.0.1'
+}

@@ -4,7 +4,6 @@ import android.graphics.LinearGradient;
 import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
 import android.os.Parcel;
-import android.text.ParcelableSpan;
 import android.text.TextPaint;
 import android.text.style.CharacterStyle;
 import android.text.style.UpdateAppearance;
@@ -16,7 +15,9 @@ import android.text.style.UpdateAppearance;
  * @author nolan
  * 
  */
-public class TopDownGradientSpan extends CharacterStyle implements UpdateAppearance, ParcelableSpan {
+// [customizacao] nao implementa mais ParcelableSpan: no Android 17 o servico de acessibilidade
+// serializa o texto e exige getSpanTypeIdInternal() (metodo interno), abortando o app.
+public class TopDownGradientSpan extends CharacterStyle implements UpdateAppearance {
 
     private static final int ID = 234710600; // random
 

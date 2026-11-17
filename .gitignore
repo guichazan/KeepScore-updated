@@ -6,3 +6,8 @@ usage.txt
 *~
 target
 .DS_Store
+# build moderno (Gradle)
+build/
+.gradle/
+local.properties
+*.apk

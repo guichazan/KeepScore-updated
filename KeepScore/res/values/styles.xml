@@ -31,7 +31,7 @@
         <item name="android:button">@drawable/btn_check_holo_light</item>
     </style>
   
-    <style name="KeepScorePopupTheme" parent="@style/Theme.Sherlock.Light.Dialog">
+    <style name="KeepScorePopupTheme" parent="@android:style/Theme.Holo.Light.Dialog">
         <item name="android:buttonStyle">@style/ButtonAppTheme</item>
         <item name="android:imageButtonStyle">@style/ImageButtonAppTheme</item>
         <item name="android:checkboxStyle">@style/CheckBoxAppTheme</item>

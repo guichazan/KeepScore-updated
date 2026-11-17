@@ -25,6 +25,9 @@
 		android:alphabeticShortcut="@string/menu_export_to_spreadsheet" android:icon="@drawable/action_access_storage" 
 		android:showAsAction="ifRoom|withText" />
 	
+	<item android:id="@+id/menu_win_stats" android:title="@string/menu_win_stats"
+		android:showAsAction="never" />
+
 	<item android:id="@+id/menu_settings" android:title="@string/menu_settings"
 		android:alphabeticShortcut="@string/menu_settings" android:icon="@drawable/action_settings" 
 		android:showAsAction="ifRoom" />

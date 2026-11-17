@@ -58,6 +58,28 @@ import com.nolanlawson.keepscore.util.UtilLogger;
 public class PlayerView implements OnClickListener, OnLongClickListener {
 
     private static final int MIN_NUM_HISTORY_CHARS = 3;
+
+    // [customizacao] largura da coluna de historico: cabe sinal + 5 digitos ("+99999"),
+    // medida com a fonte real (respeita o tamanho de fonte do sistema)
+    private static final String HISTORY_WIDEST_SAMPLE = "+99999";
+
+    private void fitHistoryWidthToMaxDigits() {
+        if (historyTextView == null) {
+            return;
+        }
+        android.view.ViewGroup.LayoutParams params = historyTextView.getLayoutParams();
+        if (params == null) {
+            return;
+        }
+        float textWidth = historyTextView.getPaint().measureText(HISTORY_WIDEST_SAMPLE);
+        int extra = Math.round(2 * historyTextView.getResources().getDisplayMetrics().density); // folga anti-quebra
+        int needed = (int) Math.ceil(textWidth) + historyTextView.getPaddingLeft()
+                + historyTextView.getPaddingRight() + extra;
+        if (params.width >= 0 && params.width < needed) {
+            params.width = needed;
+            historyTextView.setLayoutParams(params);
+        }
+    }
     private static final int ANIMATION_TIME = 1000;
 
     private static final UtilLogger log = new UtilLogger(PlayerView.class);
@@ -126,6 +148,10 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
             }
             deltaButtonsViewStub.setVisibility(showOnscreenDeltaButtons ? View.VISIBLE : View.GONE);
             onscreenDeltaButtonsLayout = (LinearLayout) view.findViewById(R.id.onscreen_delta_buttons_table_layout);
+        } else {
+            // [customizacao] layout sem os botoes de delta (ex.: Activity "landscape" criada com
+            // configuracao retrato pelo sistema): nao ha botoes para atualizar
+            this.showOnscreenDeltaButtons = false;
         }
 
         playerColorView = (PlayerColorView) view.findViewById(R.id.player_color_image);
@@ -136,6 +162,7 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
         scoreTextView = (AutoResizeTextView) view.findViewById(R.id.text_score);
         scoreTextView.resizeText();
         historyTextView = (TextView) view.findViewById(R.id.text_history);
+        fitHistoryWidthToMaxDigits();
         badgeTextView = (TextView) view.findViewById(R.id.text_badge);
         badgeLinearLayout = (LinearLayout) view.findViewById(R.id.linear_layout_badge);
 
@@ -252,9 +279,15 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button_minus:
+                if (consumeClickAfterLongPress(v)) {
+                    break;
+                }
                 increment(PreferenceHelper.getMinusButtonValue(context));
                 break;
             case R.id.button_plus:
+                if (consumeClickAfterLongPress(v)) {
+                    break;
+                }
                 increment(PreferenceHelper.getPlusButtonValue(context));
                 break;
             case R.id.text_history:
@@ -384,6 +417,9 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
         if (this.showOnscreenDeltaButtons) {
             for (int i = 0; i < deltaButtons.length; i++) {
                 Button button = deltaButtons[i];
+                if (button == null) {
+                    continue; // [customizacao] evita NPE quando o layout nao tem o botao
+                }
                 button.setText(IntegerUtil.toCharSequenceWithSign(PreferenceHelper.getTwoPlayerDeltaButtonValue(i, context)));
             }
         }
@@ -607,10 +643,20 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
 
         switch (view.getId()) {
             case R.id.button_plus:
-                showAdditionalDeltasPopup(true);
+                if (!showOnscreenDeltaButtons) {
+                    longPressedButton = view;
+                    showQuickDeltaPopup(view, true); // [customizacao] +1 +5 +10 +50
+                } else {
+                    showAdditionalDeltasPopup(true);
+                }
                 return true;
             case R.id.button_minus:
-                showAdditionalDeltasPopup(false);
+                if (!showOnscreenDeltaButtons) {
+                    longPressedButton = view;
+                    showQuickDeltaPopup(view, false); // [customizacao] -1 -5 -10 -50
+                } else {
+                    showAdditionalDeltasPopup(false);
+                }
                 return true;
             case R.id.text_history:
                 return showHistoryContextDialog();
@@ -691,6 +737,83 @@ public class PlayerView implements OnClickListener, OnLongClickListener {
         lastIncremented.set(0); // reset lastIncremented
         shouldAutosave.set(true);
         updateViews();
+    }
+
+    // [customizacao] valores rapidos mostrados ao segurar + / - quando a tela
+    // nao tem os botoes de delta fixos (muitos jogadores)
+    private static final int[] QUICK_DELTAS = { 1, 5, 10, 50 };
+    private android.widget.PopupWindow quickDeltaPopup;
+    // botao que abriu o popup por toque longo; o clique gerado ao soltar o dedo e ignorado
+    private View longPressedButton;
+
+    private boolean consumeClickAfterLongPress(View v) {
+        if (longPressedButton != null && longPressedButton == v) {
+            longPressedButton = null;
+            return true;
+        }
+        return false;
+    }
+
+    private void showQuickDeltaPopup(View anchor, final boolean positive) {
+        dismissQuickDeltaPopup();
+        float density = context.getResources().getDisplayMetrics().density;
+        int pad = Math.round(4 * density);
+
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setPadding(pad, pad, pad, pad);
+
+        android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
+        background.setColor(0xFFF0F0F0);
+        background.setStroke(Math.max(1, Math.round(density)), 0xFF888888);
+        background.setCornerRadius(6 * density);
+
+        final android.widget.PopupWindow popup = new android.widget.PopupWindow(row,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        popup.setBackgroundDrawable(background);
+        popup.setOutsideTouchable(true);
+        popup.setOnDismissListener(new android.widget.PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                longPressedButton = null; // proximo toque simples volta a funcionar normalmente
+            }
+        });
+
+        for (int quickDelta : QUICK_DELTAS) {
+            final int value = positive ? quickDelta : -quickDelta;
+            Button button = new Button(context);
+            button.setText(IntegerUtil.toCharSequenceWithSign(value));
+            button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18);
+            button.setMinWidth(0);
+            button.setMinimumWidth(0);
+            button.setPadding(0, 0, 0, 0);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    Math.round(64 * density), Math.round(56 * density));
+            params.setMargins(pad / 2, 0, pad / 2, 0);
+            button.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // menu fica aberto para varios toques; fecha so ao tocar fora (ou voltar)
+                    increment(value);
+                }
+            });
+            row.addView(button, params);
+        }
+
+        row.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int xOffset = (anchor.getWidth() - row.getMeasuredWidth()) / 2;
+        quickDeltaPopup = popup;
+        popup.showAsDropDown(anchor, xOffset, 0);
+    }
+
+    public void dismissQuickDeltaPopup() {
+        if (quickDeltaPopup != null) {
+            if (quickDeltaPopup.isShowing()) {
+                quickDeltaPopup.dismiss();
+            }
+            quickDeltaPopup = null;
+        }
     }
 
     private void showAdditionalDeltasPopup(final boolean positive) {

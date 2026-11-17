@@ -68,6 +68,7 @@ import com.nolanlawson.keepscore.helper.SdcardHelper.Format;
 import com.nolanlawson.keepscore.helper.SdcardHelper.Location;
 import com.nolanlawson.keepscore.helper.ToastHelper;
 import com.nolanlawson.keepscore.helper.VersionHelper;
+import com.nolanlawson.keepscore.helper.WinStatsHelper;
 import com.nolanlawson.keepscore.serialization.GamesBackup;
 import com.nolanlawson.keepscore.serialization.GamesBackupSerializer;
 import com.nolanlawson.keepscore.serialization.GamesBackupSummary;
@@ -103,6 +104,14 @@ public class MainActivity extends SherlockListActivity implements OnClickListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // [build moderno] permite URIs file:// (backup/compartilhamento legado) com targetSdk 24+
+        android.os.StrictMode.setVmPolicy(new android.os.StrictMode.VmPolicy.Builder().build());
+        // [build moderno] permissao de armazenamento em runtime (Android 6+), usada por backups
+        if (android.os.Build.VERSION.SDK_INT >= 23
+                && checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { android.Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        }
         log.d("onCreate()");
         
         setListAdapter(adapter);
@@ -204,6 +213,7 @@ public class MainActivity extends SherlockListActivity implements OnClickListene
         MenuItem exportToSpreadsheetMenuItem = menu.findItem(R.id.menu_export_to_spreadsheet);
         MenuItem settingsMenuItem = menu.findItem(R.id.menu_settings);
         MenuItem aboutMenuItem = menu.findItem(R.id.menu_about);
+        MenuItem winStatsMenuItem = menu.findItem(R.id.menu_win_stats);
         
         //
         // if the row of buttons at the bottom (select all, deselect all) is showing, offer
@@ -212,7 +222,7 @@ public class MainActivity extends SherlockListActivity implements OnClickListene
         
         MenuItem[] selectedModeMenuItems = new MenuItem[]{deleteSelectedMenuItem, shareSelectedMenuItem};
         MenuItem[] normalModeMenuItems = new MenuItem[]{loadBackupMenuItem, saveBackupMenuItem, shareMenuItem,
-                exportToSpreadsheetMenuItem, settingsMenuItem, aboutMenuItem};
+                exportToSpreadsheetMenuItem, winStatsMenuItem, settingsMenuItem, aboutMenuItem};
 
         for (MenuItem menuItem : selectedModeMenuItems) {
             menuItem.setEnabled(selectedMode);
@@ -279,6 +289,9 @@ public class MainActivity extends SherlockListActivity implements OnClickListene
             break;
         case R.id.menu_export_to_spreadsheet:
             showExportToSpreadsheetDialog(getAllGameIds());
+            break;
+        case R.id.menu_win_stats:
+            showWinStatsDialog();
             break;
         }
         return false;
@@ -413,6 +426,51 @@ public class MainActivity extends SherlockListActivity implements OnClickListene
             }).show();
     }
     
+    /** [customizacao] mostra quantas vezes cada pessoa ganhou, em todos os jogos salvos */
+    private void showWinStatsDialog() {
+        new AsyncTask<Void, Void, WinStatsHelper.Result>() {
+
+            @Override
+            protected WinStatsHelper.Result doInBackground(Void... params) {
+                GameDBHelper dbHelper = null;
+                try {
+                    dbHelper = new GameDBHelper(MainActivity.this);
+                    return WinStatsHelper.computeWins(dbHelper.findAllGames());
+                } finally {
+                    if (dbHelper != null) {
+                        dbHelper.close();
+                    }
+                }
+            }
+
+            @Override
+            protected void onPostExecute(WinStatsHelper.Result result) {
+                super.onPostExecute(result);
+                if (isFinishing()) {
+                    return;
+                }
+                StringBuilder message = new StringBuilder();
+                if (result.getPlayers().isEmpty()) {
+                    message.append(getString(R.string.text_win_stats_empty));
+                } else {
+                    int position = 0;
+                    for (WinStatsHelper.PlayerWinStats stats : result.getPlayers()) {
+                        position++;
+                        message.append(getString(R.string.text_win_stats_line, position, stats.getName(),
+                                stats.getWins(), stats.getGamesPlayed())).append('\n');
+                    }
+                    message.append('\n').append(getString(R.string.text_win_stats_summary,
+                            result.getGamesCounted()));
+                }
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.menu_win_stats)
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
+        }.execute((Void) null);
+    }
+
     private void exportToSpreadsheet(final List<Integer> gameIds) {
         
         final ProgressDialog progressDialog = showProgressDialog(R.string.text_loading_generic, 

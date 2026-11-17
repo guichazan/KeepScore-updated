@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableRow xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:squareimage="http://schemas.android.com/apk/res/com.nolanlawson.keepscore">
+    xmlns:squareimage="http://schemas.android.com/apk/res-auto">
 
     <com.nolanlawson.keepscore.widget.PlayerColorView
         android:id="@+id/player_color_image"

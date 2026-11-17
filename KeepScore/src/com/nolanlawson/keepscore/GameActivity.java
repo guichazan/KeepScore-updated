@@ -149,6 +149,12 @@ public abstract class GameActivity extends SherlockActivity {
 
         paused = true;
 
+        if (playerViews != null) { // [customizacao] fecha popup de valores rapidos
+            for (PlayerView playerView : playerViews) {
+                playerView.dismissQuickDeltaPopup();
+            }
+        }
+
         if (shouldAutosave()) {
             saveGame(game, false, null);
         }

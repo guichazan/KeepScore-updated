@@ -1,5 +1,7 @@
 package com.nolanlawson.keepscore;
 
+import android.content.Context;
+import android.content.res.Configuration;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -9,6 +11,23 @@ public class LandscapeGameActivity extends GameActivity {
     private LinearLayout rowLayout3;
     private LinearLayout rowLayout4;
     
+    /**
+     * [customizacao] Android 17+: a Activity pode ser criada ainda com configuracao retrato,
+     * antes do sistema aplicar o screenOrientation="landscape". Sem isto, o layout retrato
+     * (sem game_row_2/3/4 e sem botoes de delta) e inflado e o app aborta com NPE.
+     * Forca os recursos desta Activity a usarem a configuracao landscape (layout-land).
+     */
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
+        Configuration current = newBase.getResources().getConfiguration();
+        if (current.orientation != Configuration.ORIENTATION_LANDSCAPE) {
+            Configuration override = new Configuration(current);
+            override.orientation = Configuration.ORIENTATION_LANDSCAPE;
+            applyOverrideConfiguration(override);
+        }
+    }
+
     @Override
     public void hideAbsentPlayers() {
         

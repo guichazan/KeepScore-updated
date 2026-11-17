@@ -1,9 +1,14 @@
-KeepScore ![project unmaintained](https://img.shields.io/badge/project-unmaintained-red.svg)
-=========
+KeepScore (updated fork)
+=========================
+
+An updated fork of [KeepScore][12], the free and open-source score-keeping app for Android
+originally written by Nolan Lawson. The original project is unmaintained; this fork keeps it
+building with a modern toolchain and running on current Android versions (tested on Android 17),
+and adds a few gameplay improvements.
 
 Author
 --------
-Nolan Lawson
+Original app: Nolan Lawson. Fork changes: [guichazan](https://github.com/guichazan).
 
 License
 ---------
@@ -14,23 +19,98 @@ Overview
 
 ![Screenshot][2]
 
-KeepScore is a free and open-source score-keeping app for Android. 
-Pull requests are always welcome.  I'll try to incorporate your changes into the app 
-on the Google Play Store as soon as I can.
+KeepScore is a free and open-source score-keeping app for Android.
+
+What's new in this fork
+-------------------------
+
+### New features
+
+- **Quick delta menu.** When a game has too many players to show the on-screen delta buttons
+  (and in portrait mode), long-press **+** or **-** to open a small menu with
+  **+1 +5 +10 +50** (or **-1 -5 -10 -50**). The menu stays open for repeated taps and closes
+  when you tap outside it. A normal tap on **+** / **-** still adds or subtracts as before.
+- **Win statistics.** A new *Win statistics* entry in the main menu shows how many times each
+  player has won, and how many games they played, across all saved games:
+  - the highest score wins; ties count as a win for everyone tied;
+  - games without any recorded round are ignored;
+  - player names are matched ignoring case and surrounding spaces;
+  - unnamed players ("Player 1", ...) are not counted.
+- The history column is wide enough for a sign plus 5 digits (e.g. `+99999`).
+
+### Fixes for recent Android versions
+
+- **Landscape game screen crash.** If the system created the landscape game screen while the
+  display was still in portrait (e.g. when another app forces the screen orientation), the app
+  crashed with a `NullPointerException`. The landscape screen now always loads its landscape
+  layout.
+- **Accessibility crash.** On Android 17, the app crashed whenever an accessibility service
+  (screen readers, automation tools, etc.) read the score text, because `TopDownGradientSpan`
+  declared `ParcelableSpan` without implementing a newer internal method. It no longer
+  declares that interface.
+- Runtime storage permission and legacy `file://` URIs, so backups keep working on newer Android.
+
+### Two app variants
+
+The build produces two independent apps that can be installed side by side, each with its own
+saved games:
+
+| Flavor     | Application ID                 | App name  |
+|------------|--------------------------------|-----------|
+| `original` | `com.nolanlawson.keepscore`    | KeepScore |
+| `two`      | `com.nolanlawson.keepscore2`   | KScore    |
 
 Download
 ----------
 
-KeepScore may be downloaded from [the Google Play Store][4].  
-
-You can also find a direct APK download link from [the KeepScore page on my web site][3].
-
-More details about KeepScore can also be found in [my blog posts][10].
+The original KeepScore was published on [the Google Play Store][4]; that version does not include
+the changes from this fork. More details about the original app can be found in
+[Nolan Lawson's blog posts][10].
 
 Build it yourself
 ------------------
 
-KeepScore is built using [Maven][8].
+This fork is built with **Gradle** (the original Maven build below is no longer maintained).
+
+Requirements:
+
+- JDK 17 or newer (tested with JDK 21)
+- Gradle 8.x (tested with 8.12.1) and the Android Gradle Plugin 8.2.2
+- Android SDK with platform 34 (`compileSdk 34`; `minSdk 21`, `targetSdk 24`)
+
+Create a `local.properties` file in the repository root pointing to your Android SDK
+(this file is git-ignored):
+
+```
+sdk.dir=/path/to/android-sdk
+```
+
+Then build both variants from the repository root:
+
+```
+gradle :KeepScore:assembleDebug
+```
+
+The APKs are written to:
+
+```
+KeepScore/build/outputs/apk/original/debug/KeepScore-original-debug.apk
+KeepScore/build/outputs/apk/two/debug/KeepScore-two-debug.apk
+```
+
+Install on a connected device, keeping existing saved games:
+
+```
+adb install -r KeepScore/build/outputs/apk/original/debug/KeepScore-original-debug.apk
+adb install -r KeepScore/build/outputs/apk/two/debug/KeepScore-two-debug.apk
+```
+
+Dependencies are resolved from Maven Central / JitPack (AmbilWarna color picker), plus a
+patched ActionBarSherlock AAR checked in at `patched-abs/`.
+
+### Legacy Maven build (original project, unmaintained)
+
+The original project was built using [Maven][8]. These instructions are kept for reference only.
 
 KeepScore has a dependency, [AmbilWarna][11], which is not avilable in Maven.  So you'll have to first install it manually:
 
@@ -53,6 +133,9 @@ You must have Maven 3.0.3+ installed in order for this to work.
 
 Add a translation
 -------------------
+
+*The section below is from the original project.*
+
 
 KeepScore is currently localized into English, French, Japanese, Hebrew, Italian, and German.  For the benefit of
 board gamers around the world, though, I'm
@@ -153,3 +236,4 @@ yourself.  Thanks!
 [9]: https://github.com/4e6/android-localization-helper
 [10]: http://nolanlawson.com/tag/keepscore/
 [11]: https://code.google.com/p/android-color-picker/
+[12]: https://github.com/nolanlawson/KeepScore
